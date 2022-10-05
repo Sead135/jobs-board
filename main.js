@@ -7,7 +7,7 @@
 
 window.onload = () => {
   // Limit setting
-  let limit = 5;
+  let limit = 10;
 
   // We are waiting for the widget to be mounted and pick up the necessary elements
   function collectData() {
