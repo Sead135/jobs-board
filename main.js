@@ -1,17 +1,34 @@
+/*
+ * Скрипт должен при загрузке страницы скрыть список работ в
+ * соответствии с установленным лимитом. На данной итерации
+ * скрипт скрывает посты и отображает при достижении таргета,
+ * но наблюдаются проблемы с работой observer (отрабатывает 2 раза)
+ */
+
 window.onload = () => {
   // Limit setting
-  let limit = 10;
+  let limit = 5;
 
-  // Array of all elements
-  const cardItems = [
-    ...document.querySelectorAll(`[class*="Grid__Container"] > div`),
-  ];
-  const layoutContainer = document.querySelector(
-    `[class*="LayoutContainer__Container"]`
-  );
+  // We are waiting for the widget to be mounted and pick up the necessary elements
+  function collectData() {
+    const interval = setInterval(() => {
+      const cardItems = [
+        ...document.querySelectorAll(`[class*="Grid__Container"] > div`),
+      ];
+      if (cardItems.length > 0) {
+        handlerData(cardItems);
+        console.log(cardItems);
+        clearInterval(interval);
+      }
+    }, 500);
+  }
 
-  if (cardItems) {
+  // The main logic of working with received elements
+  function handlerData(cardItems) {
     // Create a target element at the end of the list of works
+    const layoutContainer = document.querySelector(
+      `[class*="LayoutContainer__Container"]`
+    );
     const loadMore = document.createElement("div");
     loadMore.style = `width: 100%; height: 1px;`;
     layoutContainer.appendChild(loadMore);
@@ -27,20 +44,17 @@ window.onload = () => {
 
     // Works with scroll
     const observer = new IntersectionObserver(() => {
-      if (cardItems.length > countJobs) {
-        countJobs += limit;
-      } else {
-        countJobs = cardItems.length;
-        observer.unobserve(loadMore); // Turning off the observer
-      }
-
       // We emulate data loading from the server
       setTimeout(() => {
-        showJobsInView();
-      }, 2000)
-    }, options);
+        countJobs += limit;
+        if (cardItems.length < countJobs) {
+          countJobs = cardItems.length;
+          observer.unobserve(loadMore); // Turning off the observer
+        }
 
-    observer.observe(loadMore);
+        showJobsInView();
+      }, 500);
+    }, options);
 
     // Checking for a limit, if everything is ok, then it shows blocks
     const showJobsInView = () => {
@@ -50,6 +64,10 @@ window.onload = () => {
           : (item.style.display = "none")
       );
     };
+
+    observer.observe(loadMore);
+
     showJobsInView();
   }
+  collectData();
 };
